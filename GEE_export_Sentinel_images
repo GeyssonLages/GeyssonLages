@@ -1,0 +1,41 @@
+/*
+Recorte Bacias Debora 
+Trabalhando com coleções de imagens e composições de banda
+Data: 05/11/2021
+
+*/
+
+// Carregar os dados iniciais
+
+
+var areaCorte = geometry;
+
+Map.centerObject(areaCorte, 10);
+
+// Mosaico a partir de redutor Mediana em Sentinel
+
+var s2 = ee.ImageCollection("COPERNICUS/S2_SR")
+                  .filterBounds(areaCorte)
+                  .filterDate('2019-01-01', '2020-12-31')
+                  .filterMetadata('CLOUDY_PIXEL_PERCENTAGE', 'less_than', 10)
+                  .select(['B4','B3','B2']);
+
+// print(s2);
+
+var s2Median = s2.median().clip(areaCorte); //a mediana é boa para excluir os outliers
+
+// print(s2Median);
+
+Map.addLayer(s2Median, visS2B432, 'Sentinel 2');
+
+
+
+Export.image.toDrive({
+      image: s2Median,
+      folder: 'bacia', //substitua pelos seus nomes
+      region: areaCorte,
+      description: 'bacias_SJB_Cedro', //substitua por seu nome
+      scale: 10,
+      //crs: 'EPSG:4326',
+            maxPixels: 1e13,
+});
